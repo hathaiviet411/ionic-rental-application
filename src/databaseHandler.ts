@@ -1,15 +1,16 @@
 import { openDB } from 'idb';
-import { Student } from './student';
+import { Apartment } from './apartment';
 
-const DATABASE_NAME = 'RentalZ';
+const DATABASE = 'Apartment';
+const TABLE = 'table_apartment';
 
 async function initDB() {
-  const db = await openDB(DATABASE_NAME, 1, {
+  const db = await openDB(DATABASE, 1, {
     upgrade(db) {
-      const store = db.createObjectStore('student', {
+      const store = db.createObjectStore(TABLE, {
         keyPath: 'id',
         autoIncrement: true,
-      });
+      }); 
     }
   });
 };
@@ -18,73 +19,75 @@ initDB().then(() => {
   console.log('Database is ready');
 });
 
-export async function insertStudent(student:any) {
-  const db = await openDB(DATABASE_NAME, 1);
+export async function insertApartment(apartment: any) {
+  const db = await openDB(DATABASE, 1);
 
-  await db.put('student', student)
+  await db.put(TABLE, apartment)
     .then(() => {
-      console.log('You have successfully created 1 student: ', student);
+      console.log('Apartment have been created successfully: ', apartment);
     })
     .catch((err) => {
-      console.log('You have an error occurred');
+      console.log('Error');
       console.log(err);
     });
 };
 
-export async function updateStudent(dataUpdateStudent:any, id:number) {
-  const db = await openDB(DATABASE_NAME, 1);
-  const student = await db.transaction('student').objectStore('student').get(id) as Student
-  student.name = dataUpdateStudent.name
-  student.gender = dataUpdateStudent.gender
-  student.languages = dataUpdateStudent.languages
-  student.country = dataUpdateStudent.country
-  student.dateOfBirth = dataUpdateStudent.dateOfBirth
+export async function updateApartment(dataUpdate: any, id: number) {
+  const db = await openDB(DATABASE, 1);
 
-  await db.put('student', student)
+  const apartment = await db.transaction(TABLE).objectStore(TABLE).get(id) as Apartment;
+
+  apartment.propertyType = dataUpdate.propertyType;
+  apartment.bedrooms = dataUpdate.bedrooms;
+  apartment.dateOfAddedProperty = dataUpdate.dateOfAddedProperty;
+  apartment.monthlyRentPrice = dataUpdate.monthlyRentPrice;
+  apartment.furnitureTypes = dataUpdate.furnitureTypes;
+  apartment.notes = dataUpdate.notes;
+  apartment.nameReporter = dataUpdate.nameReporter;
+
+  await db.put(TABLE, apartment)
     .then(() => {
-      console.log(`You have successfully updated information for student whose id is ${id}`);
-      console.log(student);
+      console.log(`Apartment's information have been updated successfully: ${id}`);
+      console.log(apartment);
     })
     .catch((err) => {
-      console.log('You have an error occurred');
+      console.log('Error');
       console.log(err);
     });
 };
 
-export async function deleteStudent(id:number) {
-  const db = await openDB(DATABASE_NAME, 1);
+export async function deleteApartment(id: number) {
+  const db = await openDB(DATABASE, 1);
 
-  await db.delete('student', id)
+  await db.delete(TABLE, id)
     .then(() => {
-      console.log(`You have successfully deleted the student whose id is ${id}`);
+      console.log(`Apartment have been deleted successfully: ${id}`);
     })
     .catch((err) => {
-      console.log('You have an error occurred');
+      console.log('Error');
       console.log(err);
     });
 };
 
-export async function getStudentById(id:number) {
-  const db = await openDB(DATABASE_NAME, 1);
+export async function getApartmentById(id: number) {
+  const db = await openDB(DATABASE, 1);
+  const apartment = await db.transaction(TABLE).objectStore(TABLE).get(id);
 
-  const student = await db.transaction('student').objectStore('student').get(id);
-
-  return student;
-};
-
-export async function getAllStudent() {
-  const db = await openDB(DATABASE_NAME, 1);
-
-  let student = await db.transaction('student').objectStore('student').openCursor();
-
-  let allStudent = [];
-
-  while (student) {
-    allStudent.push(student.value);
-
-    student = await student.continue();
-  };
-
-  return allStudent;
+  return apartment;
 }
 
+export async function getAllApartment() {
+  const db = await openDB(DATABASE, 1);
+
+  let apartment = await db.transaction(TABLE).objectStore(TABLE).openCursor();
+
+  let allApartment = [];
+
+  while (apartment) {
+    allApartment.push(apartment.value);
+
+    apartment = await apartment.continue();
+  };
+
+  return allApartment;
+};
