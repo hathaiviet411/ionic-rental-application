@@ -21,116 +21,135 @@ import {
 } from '@ionic/react';
 import { useState } from 'react';
 import { useHistory } from 'react-router';
-import { insertApartment } from '../databaseHandler';
+import { createApartment } from '../databaseHandler';
+
+// Format the date to YYYY/mm/dd format
+function ymdFormatDate(year: number, month: number, date: number) {
+  if (!year && !month && !date) {
+    return '';
+  }
+
+  return `${year}/${month}/${date}`;
+};
+
+// Get the year, month, day fo the user input
+function convertDateToYMD(date: string) {
+  if (!date) {
+    return '';
+  }
+  const newDate = new Date(date);
+  const year = newDate.getFullYear();
+  const month = (newDate.getMonth() + 1);
+  const day = newDate.getDate();
+
+  return ymdFormatDate(year, month, day);
+};
 
 const Create: React.FC = () => {
   const [propertyType, setPropertyType] = useState('');
   const [bedrooms, setBedrooms] = useState('');
-  const [dateOfAddedProperty, setDateOfAddedProperty] = useState('');
+  const [date, setDate] = useState('');
   const [monthlyRentPrice, setMonthlyRentPrice] = useState('');
   const [furnitureTypes, setFurnitureTypes] = useState('');
   const [notes, setNotes] = useState('');
   const [nameReporter, setNameReporter] = useState('');
-  const [showToast, setShowToast] = useState(false);
+  const [showToastMessage, setShowToastMessage] = useState(false);
   const [headerMessage, setHeaderMessage] = useState('');
   const [message, setMessage] = useState('');
   const [colorMessage, setColorMessage] = useState('');
   const history = useHistory();
 
-  /**
-   * Function handle Submit Form
-   */
-   const handleSubmit = async() => {
-    const Form = {
+  const handleSubmitNewApartment = async() => {
+    const RentalApplicationData = {
       propertyType,
       bedrooms,
-      dateOfAddedProperty,
+      date: convertDateToYMD(date),
       monthlyRentPrice,
       furnitureTypes,
       notes,
       nameReporter,
     };
 
-    if (Form.propertyType.length === 0) {
+    if (RentalApplicationData.propertyType.length === 0) {
       setHeaderMessage('Warning');
       setMessage('Property Type is required !');
       setColorMessage('danger');
-      setShowToast(true);
+      setShowToastMessage(true);
 
-      setTimeout(()=>{
-        setShowToast(false);
+      setTimeout(() => {
+        setShowToastMessage(false);
       }, 3000)
-    } else if (Form.bedrooms.length === 0) {
+    } else if (RentalApplicationData.bedrooms.length === 0) {
       setHeaderMessage('Warning');
       setMessage('Bedrooms is required !');
       setColorMessage('danger');
-      setShowToast(true);
+      setShowToastMessage(true);
 
-      setTimeout(()=>{
-        setShowToast(false);
+      setTimeout(() => {
+        setShowToastMessage(false);
       }, 3000)
-    } else if (Form.dateOfAddedProperty.length === 0) {
+    } else if (RentalApplicationData.date.length === 0) {
       setHeaderMessage('Warning');
       setMessage('Date of the added property is required !');
       setColorMessage('danger');
-      setShowToast(true);
+      setShowToastMessage(true);
 
-      setTimeout(()=>{
-        setShowToast(false);
+      setTimeout(() => {
+        setShowToastMessage(false);
       }, 3000)
-    } else if (Form.monthlyRentPrice.length === 0) {
+    } else if (RentalApplicationData.monthlyRentPrice.length === 0) {
       setHeaderMessage('Warning');
       setMessage('Monthly rent price is required !');
       setColorMessage('danger');
-      setShowToast(true);
+      setShowToastMessage(true);
 
-      setTimeout(()=>{
-        setShowToast(false);
+      setTimeout(() => {
+        setShowToastMessage(false);
       }, 3000)
-    } else if (Form.nameReporter.length === 0) {
+    } else if (RentalApplicationData.furnitureTypes.length === 0) {
       setHeaderMessage('Warning');
-      setMessage(`Reporter's name is required !`);
+      setMessage(`Furniture type is required !`);
       setColorMessage('danger');
-      setShowToast(true);
+      setShowToastMessage(true);
 
-      setTimeout(()=>{
-        setShowToast(false);
+      setTimeout(() => {
+        setShowToastMessage(false);
       }, 3000)
     } else {
+      await createApartment(RentalApplicationData);
+
       setHeaderMessage('Success');
-      setMessage('🌟 Apartment Have Been Created Successfully.');
+      setMessage('Created Apartment Successfully !');
       setColorMessage('success');
-      setShowToast(true);
-
-      await insertApartment(Form);
-
+      setShowToastMessage(true);
+      
       setTimeout(()=>{
-        setShowToast(false);
-        history.goBack();
-      }, 3000) 
-  }
+        setShowToastMessage(false);
+        history.push('/home');
+      }, 2000)
+    }
   };
 
   return (
     <IonPage>
 
-      {/* Header */}
+      {/* Application Header */}
       <IonHeader>
         <IonToolbar>
-          <IonTitle>🌃 New Apartment</IonTitle>
+          <IonTitle>Create Screen</IonTitle>
         </IonToolbar>
       </IonHeader>
 
-      {/* Content */}
+      {/* Application Content */}
       <IonContent fullscreen>
         <IonGrid>
 
           {/* Property Type */}
           <IonRow>
             <IonCol>
-              <IonLabel position="stacked">🗃 Property Type</IonLabel>
+              <IonLabel position="stacked">🗃 Property type</IonLabel>
               <IonSelect
-                value={propertyType}
+                value={ propertyType }
                 onIonChange={event => setPropertyType(event.detail.value)}
                 placeholder="Please Select Property Type."
               >
@@ -141,11 +160,13 @@ const Create: React.FC = () => {
             </IonCol>
           </IonRow>
 
-          {/* Number of The Bedrooms */}
+          {/* Bedrooms */}
           <IonRow>
             <IonCol>
               <IonLabel position="stacked">🛌 Bedrooms</IonLabel>
               <IonInput
+                value={ bedrooms }
+                type="number"
                 onIonChange={event => setBedrooms(event.detail.value!)}
                 placeholder="Please Enter The Number of The Bedrooms."
               ></IonInput>
@@ -157,7 +178,8 @@ const Create: React.FC = () => {
             <IonCol>
               <IonLabel position="stacked">📅 Date</IonLabel>
               <IonDatetime
-                onIonChange={event => setDateOfAddedProperty(event.detail.value!)} 
+                value={ date }
+                onIonChange={event => setDate(event.detail.value!)} 
                 display-format="YYYY/MM/DD" 
                 placeholder="Please Select The Date of The Added Property."
               ></IonDatetime>
@@ -168,7 +190,9 @@ const Create: React.FC = () => {
           <IonRow>
             <IonCol>
               <IonLabel position="stacked">💰 Monthly Rent Price</IonLabel>
-              <IonInput
+              <IonInput 
+                value={ monthlyRentPrice }
+                type="number"
                 onIonChange={event => setMonthlyRentPrice(event.detail.value!)} 
                 placeholder="Please Enter Monthly Rent Price."
               ></IonInput>
@@ -179,29 +203,24 @@ const Create: React.FC = () => {
           <IonRow>
             <IonCol>
               <IonLabel position="stacked">🚪 Furniture Types</IonLabel>
-              <IonRadioGroup onIonChange={event => setFurnitureTypes(event.detail.value)} style={{ marginTop: '10px' }}>
+
+              <IonRadioGroup value={ furnitureTypes } onIonChange={event => setFurnitureTypes(event.detail.value)} style={{ marginTop: '10px' }}>
               <IonItem>
                 <IonLabel><small>Furnished</small></IonLabel>
-                <IonRadio 
-                  slot="start" 
-                  value="Furnished"
-                ></IonRadio>
+                <IonRadio slot="start" value="Furnished"></IonRadio>
               </IonItem>
+
               <IonItem>
                 <IonLabel><small>Unfurnished</small></IonLabel>
-                <IonRadio 
-                  slot="start" 
-                  value="Unfurnished"
-                ></IonRadio>
+                <IonRadio slot="start" value="Unfurnished"></IonRadio>
               </IonItem>
+
               <IonItem>
                 <IonLabel><small>Part Furnished</small></IonLabel>
-                <IonRadio 
-                  slot="start" 
-                  value="PartFurnished"
-                ></IonRadio>
+                <IonRadio slot="start" value="PartFurnished"></IonRadio>
               </IonItem>
             </IonRadioGroup>
+
             </IonCol>
           </IonRow>
 
@@ -209,10 +228,7 @@ const Create: React.FC = () => {
           <IonRow>
             <IonCol>
               <IonLabel position="stacked">📝 Notes</IonLabel>
-              <IonTextarea
-                onIonChange={event => setNotes(event.detail.value!)}
-                placeholder="Please Enter Notes."
-              ></IonTextarea>
+              <IonTextarea value={ notes } onIonChange={event => setNotes(event.detail.value!)} placeholder="Please Enter Notes"></IonTextarea>
             </IonCol>
           </IonRow>
 
@@ -220,27 +236,22 @@ const Create: React.FC = () => {
           <IonRow>
             <IonCol>
               <IonLabel position="stacked">🔖 Name of The Reporter</IonLabel>
-              <IonInput
-                onIonChange={event => setNameReporter(event.detail.value!)} 
-                placeholder="Please Enter Name of The Reporter."
-              ></IonInput>
+              <IonInput value={ nameReporter } onIonChange={event => setNameReporter(event.detail.value!)} placeholder="Input name reporter"></IonInput>
             </IonCol>
           </IonRow>
 
+          {/* Button Submit */}
           <IonRow>
             <IonCol>
-              {/* Button Submit */}
-              <IonButton color="success" expand="block" onClick={handleSubmit}>
-                🗃 Submit
-              </IonButton>
+              <IonButton color="success" expand="block" onClick={ handleSubmitNewApartment }>🗃 Submit</IonButton>
             </IonCol>
           </IonRow>
 
         </IonGrid>
       </IonContent>
 
-      {/* Toast */}
-      <IonToast isOpen={showToast} header={headerMessage} message={message} color={colorMessage} position="top"></IonToast>
+      {/* Application Toast Message */}
+      <IonToast isOpen={ showToastMessage } header={ headerMessage } message={ message } color={ colorMessage } position="top"></IonToast>
 
     </IonPage>
   );

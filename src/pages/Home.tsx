@@ -13,97 +13,117 @@ import {
   IonCardHeader,
   IonCardContent,
   IonToast,
+  useIonViewDidEnter,
 } from '@ionic/react';
 import '../style/Home.css';
 import { addCircle } from 'ionicons/icons';
-import { useEffect, useState } from 'react';
-import { getAllApartment, deleteApartment } from '../databaseHandler';
+import { useState } from 'react';
+import { getListAllApartment, removeApartment } from '../databaseHandler';
 import { Apartment } from '../apartment';
 
+function showFurnitureTypes(furniture_type: string) {
+  const FurnishedType = 'Furnished';
+  const UnfurnishedType = 'Unfurnished';
+  const PartFurnishedType = 'Part Furnished';
+
+  if (furniture_type) {
+    if (furniture_type === 'Furnished') {
+      return FurnishedType;
+    } else if (furniture_type === 'Unfurnished') {
+      return UnfurnishedType;
+    } else if (furniture_type === 'PartFurnished') {
+      return PartFurnishedType;
+    } else{
+      return '';
+    }
+  }
+}
+
 const Home: React.FC = () => {
-  const [listApartment, setListApartment] = useState<Apartment[]>([]);
-  const [showToast, setShowToast] = useState(false);
+  const [rentalApartmentList, setRentalApartmentList] = useState<Apartment[]>([]);
+  const [showToastMessage, setShowToastMessage] = useState(false);
+  const [message, setMessage] = useState('');
 
   async function fetchData() {
-    const allApartment = await getAllApartment();
-
-    setListApartment(allApartment);
+    const listAllRentalApartment = await getListAllApartment();
+    setRentalApartmentList(listAllRentalApartment);
   };
 
-  useEffect(() => {
+  useIonViewDidEnter(() => {
     fetchData();
-  }, []);
+  });
 
-  async function handleDelete(id: number) {
-    const userConfirm = window.confirm("Are you sure to delete this apartment?");
-
-    if (userConfirm) {
-      await deleteApartment(id);
-      setShowToast(true);
-      setTimeout(()=>{
-        setShowToast(false);
-      }, 5000);
-      await fetchData();
-    };
+  async function handleRemoveApartment(id: number) {
+    await removeApartment(id);
+    setMessage(`Delete apartment: 🏛 - ${id}, successfully !`);
+    setShowToastMessage(true);
+    setTimeout(()=>{
+      setShowToastMessage(false);
+    }, 3000);
+    await fetchData();
   }
 
   return (
     <IonPage>
 
-      {/* Header */}
+      {/* Application Header */}
       <IonHeader>
         <IonToolbar>
-          <IonTitle>🏩 RentalZ Application</IonTitle>
+          <IonTitle>🏩 Apartment Rental</IonTitle>
         </IonToolbar>
       </IonHeader>
 
-      {/* Content */}
+      {/* Application Content */}
       <IonContent fullscreen>
         <IonGrid>
 
+          {/* Button Create New Apartment */}
           <IonRow>
             <IonCol>
               <IonButton size="default" color="dark" href="/create" expand="block">
-                <IonIcon slot="start" icon={addCircle}></IonIcon>
-                New Apartment
+                <IonIcon slot="start" icon={ addCircle }></IonIcon>
               </IonButton>
             </IonCol>
           </IonRow>
 
-          {listApartment &&
-            listApartment.map((apartment, index) => 
+          {rentalApartmentList &&
+            rentalApartmentList.map((rentalApartment, index) => 
               <IonCard key={index}>
-                <IonCardHeader>Apartment ID: #{ apartment.id }</IonCardHeader>
+
+                <IonCardHeader>
+                  Rental Apartment ID: 🏛 - { rentalApartment.id }
+                </IonCardHeader>
+
                 <IonCardContent>
-                  <h6>Property Type: { apartment.propertyType }</h6>
-                  <h6>Bedrooms: { apartment.bedrooms }</h6>
-                  <h6>Date of The Added Property: { apartment.dateOfAddedProperty }</h6>
-                  <h6>Monthly Rent Price: { apartment.monthlyRentPrice}</h6>
-                  <h6>Furniture Types: { apartment.furnitureTypes }</h6>
-                  <h6>Notes: { apartment.notes }</h6>
-                  <h6>Name of The Reporter: { apartment.nameReporter }</h6>
+                  <h6>🗃 Property Type: { rentalApartment.propertyType }</h6>
+                  <h6>🛌 Bedrooms: { rentalApartment.bedrooms }</h6>
+                  <h6>📅 Date: { rentalApartment.date }</h6>
+                  <h6>💰 Monthly Rent Price: { rentalApartment.monthlyRentPrice}</h6>
+                  <h6>🚪 Furniture Types: { showFurnitureTypes(rentalApartment.furnitureTypes) }</h6>
+                  <h6>📝 Notes: { rentalApartment.notes }</h6>
+                  <h6>🔖 Name of The Reporter: { rentalApartment.nameReporter }</h6>
 
                   <IonRow>
                     <IonCol>
-                      {/* Button Update Apartment */}
                       <IonButton 
                         size="default" 
-                        color="secondary" 
-                        className="btn-handle" 
+                        color="warning" 
+                        className="functional-btn" 
                         style={{ float: 'left' }}
-                        routerLink={`detail/${apartment.id}`}
-                      >🖋 Update</IonButton>
+                        routerLink={`/detail/${rentalApartment.id}`}
+                      >Update
+                      </IonButton>
                     </IonCol>
 
                     <IonCol>
-                      {/* Button Delete Apartment */}
                       <IonButton 
                         size="default" 
                         color="danger" 
-                        className="btn-handle" 
+                        className="functional-btn" 
                         style={{ float: 'right' }}
-                        onClick={() => handleDelete(apartment.id || -1)}
-                      >🧼️ Delete</IonButton>
+                        onClick={() => handleRemoveApartment(rentalApartment.id || -1)}
+                      >Remove
+                      </IonButton>
                     </IonCol>
                   </IonRow>
                 </IonCardContent>
@@ -113,8 +133,9 @@ const Home: React.FC = () => {
 
         </IonGrid>
       </IonContent>
-
-      <IonToast isOpen={showToast} header="Success" message="🌟 Apartment Have Been Delete Successfully !" color="success" position="top"></IonToast>
+      
+      {/* Application Toast Message */}
+      <IonToast isOpen={ showToastMessage } header="Success" message={ message } color="success" position="top"></IonToast>
 
     </IonPage>
   );

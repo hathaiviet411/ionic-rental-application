@@ -18,11 +18,32 @@ import {
   IonTextarea,
   IonButton,
   IonToast,
+  useIonAlert,
 } from '@ionic/react';
 import { useEffect, useState } from 'react';
 import { useHistory, useParams } from 'react-router';
 import { getApartmentById, updateApartment } from '../databaseHandler';
 import { Apartment } from '../apartment';
+
+function convertDateToYMD(date: string) {
+  if (!date) {
+    return '';
+  }
+  const newDate = new Date(date);
+  const year = newDate.getFullYear();
+  const month = (newDate.getMonth() + 1);
+  const day = newDate.getDate();
+
+  return ymdFormatDate(year, month, day);
+};
+
+function ymdFormatDate(year: number, month: number, date: number) {
+  if (!year && !month && !date) {
+    return '';
+  }
+
+  return `${year}/${month}/${date}`;
+};
 
 interface MyParams {
   id: string,
@@ -30,14 +51,15 @@ interface MyParams {
 
 const Update: React.FC = () => {
   const { id } = useParams<MyParams>();
+
   const [propertyType, setPropertyType] = useState('');
   const [bedrooms, setBedrooms] = useState('');
-  const [dateOfAddedProperty, setDateOfAddedProperty] = useState('');
+  const [date, setDate] = useState('');
   const [monthlyRentPrice, setMonthlyRentPrice] = useState('');
   const [furnitureTypes, setFurnitureTypes] = useState('');
   const [notes, setNotes] = useState('');
   const [nameReporter, setNameReporter] = useState('');
-  const [showToast, setShowToast] = useState(false);
+  const [showToastMessage, setShowToastMessage] = useState(false);
   const [headerMessage, setHeaderMessage] = useState('');
   const [message, setMessage] = useState('');
   const [colorMessage, setColorMessage] = useState('');
@@ -45,9 +67,10 @@ const Update: React.FC = () => {
 
   async function fetchData() {
     const apartment = await getApartmentById(Number.parseInt(id)) as Apartment;
+
     setPropertyType(apartment.propertyType);
     setBedrooms(apartment.bedrooms);
-    setDateOfAddedProperty(apartment.dateOfAddedProperty);
+    setDate(apartment.date);
     setMonthlyRentPrice(apartment.monthlyRentPrice);
     setFurnitureTypes(apartment.furnitureTypes);
     setNotes(apartment.notes);
@@ -56,103 +79,100 @@ const Update: React.FC = () => {
 
   useEffect(() => {
     fetchData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /**
-   * Function handle Submit Form
-   */
-   const handleSubmit = async() => {
-    const Form = {
+  const handleSubmitNewApartment = async() => {
+    const RentalApplicationData = {
       propertyType,
       bedrooms,
-      dateOfAddedProperty,
+      date: convertDateToYMD(date),
       monthlyRentPrice,
       furnitureTypes,
       notes,
       nameReporter,
     };
 
-    if (Form.propertyType.length === 0) {
+    if (RentalApplicationData.propertyType.length === 0) {
       setHeaderMessage('Warning');
       setMessage('Property Type is required !');
       setColorMessage('danger');
-      setShowToast(true);
+      setShowToastMessage(true);
 
-      setTimeout(()=>{
-        setShowToast(false);
+      setTimeout(() => {
+        setShowToastMessage(false);
       }, 3000)
-    } else if (Form.bedrooms.length === 0) {
+    } else if (RentalApplicationData.bedrooms.length === 0) {
       setHeaderMessage('Warning');
       setMessage('Bedrooms is required !');
       setColorMessage('danger');
-      setShowToast(true);
+      setShowToastMessage(true);
 
-      setTimeout(()=>{
-        setShowToast(false);
+      setTimeout(() => {
+        setShowToastMessage(false);
       }, 3000)
-    } else if (Form.dateOfAddedProperty.length === 0) {
+    } else if (RentalApplicationData.date.length === 0) {
       setHeaderMessage('Warning');
       setMessage('Date of the added property is required !');
       setColorMessage('danger');
-      setShowToast(true);
+      setShowToastMessage(true);
 
-      setTimeout(()=>{
-        setShowToast(false);
+      setTimeout(() => {
+        setShowToastMessage(false);
       }, 3000)
-    } else if (Form.monthlyRentPrice.length === 0) {
+    } else if (RentalApplicationData.monthlyRentPrice.length === 0) {
       setHeaderMessage('Warning');
       setMessage('Monthly rent price is required !');
       setColorMessage('danger');
-      setShowToast(true);
+      setShowToastMessage(true);
 
-      setTimeout(()=>{
-        setShowToast(false);
+      setTimeout(() => {
+        setShowToastMessage(false);
       }, 3000)
-    } else if (Form.nameReporter.length === 0) {
+    } else if (RentalApplicationData.furnitureTypes.length === 0) {
       setHeaderMessage('Warning');
-      setMessage(`Reporter's name is required !`);
+      setMessage(`Furniture type is required !`);
       setColorMessage('danger');
-      setShowToast(true);
+      setShowToastMessage(true);
 
-      setTimeout(()=>{
-        setShowToast(false);
+      setTimeout(() => {
+        setShowToastMessage(false);
       }, 3000)
     } else {
-      await updateApartment(Form, parseInt(id));
+      await updateApartment(RentalApplicationData, parseInt(id));
 
       setHeaderMessage('Success');
-      setMessage('🌟 Apartment Have Been Updated Successfully !');
+      setMessage('Updated Apartment Successfully !');
       setColorMessage('success');
-      setShowToast(true);
-
-      history.goBack();
-
+      setShowToastMessage(true);
+      
       setTimeout(()=>{
-        setShowToast(false);
-      }, 3000)  
-    } 
+        setShowToastMessage(false);
+        history.push('/home');
+      }, 2000)
+    }
   };
 
   return (
     <IonPage>
 
-      {/* Header */}
+      {/* Application Header */}
       <IonHeader>
         <IonToolbar>
-          <IonTitle>💒 Update Apartment</IonTitle>
+          <IonTitle>Update Screen</IonTitle>
         </IonToolbar>
       </IonHeader>
 
-      {/* Content */}
+      {/* Application Content */}
       <IonContent fullscreen>
         <IonGrid>
 
           {/* Property Type */}
           <IonRow>
             <IonCol>
-              <IonLabel position="stacked">🗃 Property Type</IonLabel>
+              <IonLabel position="stacked">🗃 Property type</IonLabel>
               <IonSelect
-                value={propertyType}
+                value={ propertyType }
                 onIonChange={event => setPropertyType(event.detail.value)}
                 placeholder="Please Select Property Type."
               >
@@ -163,12 +183,13 @@ const Update: React.FC = () => {
             </IonCol>
           </IonRow>
 
-          {/* Number of The Bedrooms */}
+          {/* Bedrooms */}
           <IonRow>
             <IonCol>
               <IonLabel position="stacked">🛌 Bedrooms</IonLabel>
               <IonInput
-                value={bedrooms}
+                value={ bedrooms }
+                type="number"
                 onIonChange={event => setBedrooms(event.detail.value!)}
                 placeholder="Please Enter The Number of The Bedrooms."
               ></IonInput>
@@ -180,8 +201,8 @@ const Update: React.FC = () => {
             <IonCol>
               <IonLabel position="stacked">📅 Date</IonLabel>
               <IonDatetime
-                value={dateOfAddedProperty}
-                onIonChange={event => setDateOfAddedProperty(event.detail.value!)} 
+                value={ date }
+                onIonChange={event => setDate(event.detail.value!)} 
                 display-format="YYYY/MM/DD" 
                 placeholder="Please Select The Date of The Added Property."
               ></IonDatetime>
@@ -192,8 +213,9 @@ const Update: React.FC = () => {
           <IonRow>
             <IonCol>
               <IonLabel position="stacked">💰 Monthly Rent Price</IonLabel>
-              <IonInput
-                value={monthlyRentPrice}
+              <IonInput 
+                value={ monthlyRentPrice }
+                type="number"
                 onIonChange={event => setMonthlyRentPrice(event.detail.value!)} 
                 placeholder="Please Enter Monthly Rent Price."
               ></IonInput>
@@ -204,29 +226,24 @@ const Update: React.FC = () => {
           <IonRow>
             <IonCol>
               <IonLabel position="stacked">🚪 Furniture Types</IonLabel>
-              <IonRadioGroup value={furnitureTypes} onIonChange={event => setFurnitureTypes(event.detail.value)} style={{ marginTop: '10px' }}>
+
+              <IonRadioGroup value={ furnitureTypes } onIonChange={event => setFurnitureTypes(event.detail.value)} style={{ marginTop: '10px' }}>
               <IonItem>
                 <IonLabel><small>Furnished</small></IonLabel>
-                <IonRadio 
-                  slot="start" 
-                  value="Furnished"
-                ></IonRadio>
+                <IonRadio slot="start" value="Furnished"></IonRadio>
               </IonItem>
+
               <IonItem>
                 <IonLabel><small>Unfurnished</small></IonLabel>
-                <IonRadio 
-                  slot="start" 
-                  value="Unfurnished"
-                ></IonRadio>
+                <IonRadio slot="start" value="Unfurnished"></IonRadio>
               </IonItem>
+
               <IonItem>
                 <IonLabel><small>Part Furnished</small></IonLabel>
-                <IonRadio 
-                  slot="start" 
-                  value="PartFurnished"
-                ></IonRadio>
+                <IonRadio slot="start" value="PartFurnished"></IonRadio>
               </IonItem>
             </IonRadioGroup>
+
             </IonCol>
           </IonRow>
 
@@ -234,11 +251,7 @@ const Update: React.FC = () => {
           <IonRow>
             <IonCol>
               <IonLabel position="stacked">📝 Notes</IonLabel>
-              <IonTextarea
-                value={notes}
-                onIonChange={event => setNotes(event.detail.value!)}
-                placeholder="Please Enter Notes."
-              ></IonTextarea>
+              <IonTextarea value={ notes } onIonChange={event => setNotes(event.detail.value!)} placeholder="Please Enter Notes"></IonTextarea>
             </IonCol>
           </IonRow>
 
@@ -246,28 +259,22 @@ const Update: React.FC = () => {
           <IonRow>
             <IonCol>
               <IonLabel position="stacked">🔖 Name of The Reporter</IonLabel>
-              <IonInput
-                value={nameReporter}
-                onIonChange={event => setNameReporter(event.detail.value!)} 
-                placeholder="Please Enter Name of The Reporter."
-              ></IonInput>
+              <IonInput value={ nameReporter } onIonChange={event => setNameReporter(event.detail.value!)} placeholder="Input name reporter"></IonInput>
             </IonCol>
           </IonRow>
 
+          {/* Button Submit */}
           <IonRow>
             <IonCol>
-              {/* Button Submit */}
-              <IonButton color="success" expand="block" onClick={handleSubmit}>
-                🗃 Submit
-              </IonButton>
+              <IonButton color="success" expand="block" onClick={ handleSubmitNewApartment }>🗃 Update</IonButton>
             </IonCol>
           </IonRow>
 
         </IonGrid>
       </IonContent>
 
-      {/* Toast */}
-      <IonToast isOpen={showToast} header={headerMessage} message={message} color={colorMessage} position="top"></IonToast>
+      {/* Application Toast Message */}
+      <IonToast isOpen={ showToastMessage } header={ headerMessage } message={ message } color={ colorMessage } position="top"></IonToast>
 
     </IonPage>
   );
