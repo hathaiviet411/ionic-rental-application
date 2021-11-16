@@ -1,4 +1,4 @@
-# Ionic Coursework Application
+# Ionic RentalZ Application
 # Requirement:
 - Create a mobile app to be used as Rental Apartments Finder. The app will allow the user to find, add and edit rental listings. 
 
