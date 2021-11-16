@@ -1,5 +1,4 @@
 # Ionic Coursework Application
-
 # Requirement:
 - Create a mobile app to be used as Rental Apartments Finder. The app will allow the user to find, add and edit rental listings. 
 
@@ -22,7 +21,7 @@
 # Run application:
 - After install Ionic framework successfully, enter this command to run the application: --> ionic serve.
 
-# Run Application in Android enviroment:
+# Run Application in Android environment:
 - To add Android: --> Firstly, run: ionic build --> then run: ionic capacitor add android.
 - Open Android Studio: Open Project --> Choose the android folder in the project folder --> Install Virtual Device or connect with a physical device --> Click run to start the application.
 - To sync changes between Ionic and Android, run: --> ionic capacitor sync android.

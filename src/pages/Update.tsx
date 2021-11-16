@@ -18,7 +18,6 @@ import {
   IonTextarea,
   IonButton,
   IonToast,
-  useIonAlert,
 } from '@ionic/react';
 import { useEffect, useState } from 'react';
 import { useHistory, useParams } from 'react-router';
